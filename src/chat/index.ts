@@ -1,22 +1,61 @@
-import ComfyJS, { OnMessageFlags, OnMessageExtra, EmoteSet } from "comfy.js";
+import ComfyJS, { OnCommandExtra, OnMessageFlags, OnMessageExtra, EmoteSet, OnSubMysteryGiftExtra, OnSubGiftExtra, OnResubExtra, OnSubExtra, OnCheerFlags, OnCheerExtra } from "comfy.js";
 import sanitizeHtml from "sanitize-html";
 
+import { CommandMonitor } from './commandMonitor';
 import { Twitch } from '../integrations/twitch';
 import { EventBus } from "../events";
-import { AutoBaldConfig, User, OnChatMessageEvent } from "../types";
+import { AutoBaldConfig, User, OnChatMessageEvent, OnCommandEvent, OnSayEvent, OnSubEvent, OnRaidEvent, OnCheerEvent, OnPartEvent, OnJoinEvent } from "../types";
 import { BotEvents } from "../botEvents";
 import { log, LogLevel } from "../log";
+import { SubMethods } from 'tmi.js'
 
 export class Chat {
+    commandMonitor: CommandMonitor
 
     constructor(private config: AutoBaldConfig) {
-        ComfyJS.onChat = this.onChat.bind(this)
+
+        this.commandMonitor = new CommandMonitor()
+
+        ComfyJS.onChat = this.onChat.bind(this);
+        ComfyJS.onCommand = this.onCommand.bind(this);
+        ComfyJS.onCheer = this.onCheer.bind(this);
+        ComfyJS.onRaid = this.onRaid.bind(this);
+        ComfyJS.onResub = this.onResub.bind(this)
+        ComfyJS.onSub = this.onSub.bind(this)
+        ComfyJS.onSubGift = this.onSubGift.bind(this)
+        ComfyJS.onSubMysteryGift = this.onSubMysteryGift.bind(this)
+        ComfyJS.onJoin = this.onJoin.bind(this)
+        ComfyJS.onPart = this.onPart.bind(this)
 
         ComfyJS.Init(this.config.twitchBotUsername, this.config.twitchBotAuthToken, this.config.twitchChannelName);
+
+        EventBus.eventEmitter.addListener(BotEvents.OnSay,
+            (onSayEvent: OnSayEvent) => this.onSay(onSayEvent))
     }
 
     public close() {
         ComfyJS.Disconnect();
+    }
+
+    private onSay(onSayEvent: OnSayEvent) {
+        ComfyJS.Say(onSayEvent.message, this.config.twitchChannelName)
+    }
+
+    private async onCommand(user: string, command: string, message: string, flags: OnMessageFlags, extra: OnCommandExtra) {
+        log(LogLevel.Info, `onCommand: ${user} sent the ${command} command`)
+        let userInfo: User
+
+        try {
+            userInfo = await Twitch.getUser(user)
+        }
+        catch (err) {
+            log(LogLevel.Error, `onCommand: getUser: ${err}`)
+        }
+
+        // Only respond to commands if we're streaming, or debugging
+        if (userInfo) {
+            this.emit(BotEvents.OnCommand, new OnCommandEvent(userInfo, command, message, flags, extra));
+        }
     }
 
     private async onChat(user: string, message: string, flags: OnMessageFlags, self: boolean, extra: OnMessageExtra) {
@@ -115,6 +154,130 @@ export class Chat {
             start,
             end
         };
+    }
+
+    private async onJoin(user: string, self: boolean) {
+        log(LogLevel.Info, `onJoin: ${user}`)
+        let userInfo: User
+
+        try {
+            userInfo = await Twitch.getUser(user)
+        }
+        catch (err) {
+            log(LogLevel.Error, `onJoin: ${err}`)
+        }
+
+        if (userInfo) {
+            this.emit(BotEvents.OnJoin, new OnJoinEvent(userInfo, self))
+        }
+    }
+
+    private async onPart(user: string, self: boolean) {
+        log(LogLevel.Info, `onPart: ${user}`)
+        let userInfo: User
+
+        try {
+            userInfo = await Twitch.getUser(user)
+        }
+        catch (err) {
+            log(LogLevel.Error, `onPart: ${err}`)
+        }
+
+        if (userInfo) {
+            this.emit(BotEvents.OnPart, new OnPartEvent(userInfo, self))
+        }
+    }
+
+    private async onCheer(user: string, message: string, bits: number, flags: OnCheerFlags, extra: OnCheerExtra) {
+        log(LogLevel.Info, `onCheer: ${user} cheered ${bits} bits`)
+        let userInfo: User
+
+        try {
+            userInfo = await Twitch.getUser(user)
+        }
+        catch (err) {
+            log(LogLevel.Error, `onCheer: ${err}`)
+        }
+
+        if (userInfo) {
+            this.emit(BotEvents.OnCheer, new OnCheerEvent(userInfo, message, bits, flags, extra))
+        }
+    }
+
+    private async onRaid(user: string, viewers: number) {
+        log(LogLevel.Info, `onRaid: ${user} raided with ${viewers} viewers`)
+        let userInfo: User
+
+        try {
+            userInfo = await Twitch.getUser(user)
+        }
+        catch (err) {
+            log(LogLevel.Error, `onRaid: ${err}`)
+        }
+
+        if (userInfo) {
+            this.emit(BotEvents.OnRaid, new OnRaidEvent(userInfo, viewers))
+        }
+    }
+
+    private async onSub(user: string, message: string, subTierInfo: SubMethods, extra: OnSubExtra) {
+        log(LogLevel.Info, `onSub: ${user} subbed`)
+        let userInfo: User
+
+        try {
+            userInfo = await Twitch.getUser(user)
+        }
+        catch (err) {
+            log(LogLevel.Error, `onSub: ${err}`)
+        }
+
+        if (userInfo) {
+            this.emit(BotEvents.OnSub, new OnSubEvent(userInfo, message, subTierInfo, extra))
+        }
+    }
+
+    private async onSubGift(gifterUser: string, streakMonths: number, recipientUser: string, senderCount: number, subTierInfo: SubMethods, extra: OnSubGiftExtra) {
+        log(LogLevel.Info, `onSubGift: ${gifterUser} gifted a sub to ${recipientUser}`)
+        let userInfo: User
+        let gifterInfo: User
+
+        try {
+            userInfo = await Twitch.getUser(recipientUser)
+        }
+        catch (err) {
+            log(LogLevel.Error, `onSubGift: ${err}`)
+        }
+
+        try {
+            gifterInfo = await Twitch.getUser(gifterUser)
+        }
+        catch (err) {
+            log(LogLevel.Error, `onSubGift: ${err}`)
+        }
+
+        if (userInfo) {
+            this.emit(BotEvents.OnSub, new OnSubEvent(userInfo, '', subTierInfo, extra, null, gifterInfo))
+        }
+    }
+
+    private async onResub(user: string, message: string, streakMonths: number, cumulativeMonths: number, subTierInfo: SubMethods, extra: OnResubExtra) {
+        log(LogLevel.Info, `onResub: ${user} resubbed for ${cumulativeMonths} total months`)
+        let userInfo: User
+
+        try {
+            userInfo = await Twitch.getUser(user)
+        }
+        catch (err) {
+            log(LogLevel.Error, `onResub: ${err}`)
+        }
+
+        if (userInfo) {
+            this.emit(BotEvents.OnSub, new OnSubEvent(userInfo, message, subTierInfo, extra, cumulativeMonths))
+        }
+    }
+
+    private onSubMysteryGift(gifterUser: string, numbOfSubs: number, senderCount: number, subTierInfo: SubMethods, extra: OnSubMysteryGiftExtra): void {
+        log(LogLevel.Info, `onSubMysteryGift: ${gifterUser} gifted ${numbOfSubs}`)
     }
 
     private emit(event: BotEvents, payload: unknown) {

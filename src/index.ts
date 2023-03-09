@@ -43,6 +43,7 @@ async function init(response: AxiosResponse<TwitchTokenResponse>) {
         twitchChannelName: process.env.TWITCH_CHANNEL ? process.env.TWITCH_CHANNEL : "",
         twitchBotUsername: process.env.TWITCH_BOT_USERNAME ? process.env.TWITCH_BOT_USERNAME : "",
         twitchBotAuthToken: process.env.TWITCH_BOT_AUTH_TOKEN ? process.env.TWITCH_BOT_AUTH_TOKEN : "",
+        twitchBotChannelId: process.env.TWITCH_BOT_CHANNEL_ID ? process.env.TWITCH_BOT_CHANNEL_ID : "",
         tigrisClientId: process.env.TIGRIS_CLIENT_ID ? process.env.TIGRIS_CLIENT_ID : "",
         tigrisClientSecret: process.env.TIGRIS_CLIENT_SECRET ? process.env.TIGRIS_CLIENT_SECRET : "",
         tigrisProjectName: process.env.TIGRIS_PROJECT_NAME ? process.env.TIGRIS_PROJECT_NAME : "",

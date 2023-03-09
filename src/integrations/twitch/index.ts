@@ -16,9 +16,9 @@ export abstract class Twitch {
     this.twitchAPI = new TwitchAPI(config)
   }
 
-  // public static async registerWebhooks(): Promise<void> {
-  //   this.twitchAPI.registerWebhooks();
-  // }
+  public static async registerWebhooks(sessionId: string): Promise<void> {
+    this.twitchAPI.registerWebhooks(sessionId);
+  }
 
   /**
    * Attempts to retrieve a user from the cache and, if needed, the Twitch API
@@ -29,7 +29,11 @@ export abstract class Twitch {
 
     let user: User = Cache.get(CacheType.User, login) as User | undefined
 
-    if (!user) {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+
+    if (!user ||
+      (!user.lastUpdated || user.lastUpdated < date)) {
 
       try {
         user = await Tigris.getUser(login);
@@ -37,9 +41,6 @@ export abstract class Twitch {
       catch (err) {
         log(LogLevel.Error, `Twitch:getUser - Tigris:getUser: ${err}`)
       }
-
-      const date = new Date();
-      date.setDate(date.getDate() - 1);
 
       if (!user ||
         (!user.lastUpdated || user.lastUpdated < date)) {

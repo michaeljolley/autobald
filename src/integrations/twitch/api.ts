@@ -13,6 +13,7 @@ export class TwitchAPI {
   private twitchAPIWebhookEndpoint = `${this.twitchAPIEndpoint}/eventsub/subscriptions`
 
   private headers: Record<string, string | number | boolean>
+  private wsHeaders: Record<string, string | number | boolean>
   private webhookSecret: string
 
   constructor(private config: AutoBaldConfig) {
@@ -21,144 +22,95 @@ export class TwitchAPI {
       'Content-Type': 'application/json',
       'Client-ID': this.config.twitchClientId
     }
+    this.wsHeaders = {
+      Authorization: `Bearer ${this.config.twitchBotAuthToken}`,
+      'Content-Type': 'application/json',
+      'Client-ID': this.config.twitchClientId
+    }
   }
 
   /**
    * Registers all webhooks with Twitch directed to this instance of the bot
    */
-  // public async registerWebhooks(): Promise<void> {
-  //   this.webhookSecret = Guid.create().toString();
+  public async registerWebhooks(sessionId: string): Promise<void> {
+    this.webhookSecret = Guid.create().toString();
 
-  //   log(LogLevel.Info, 'registering webhooks')
+    log(LogLevel.Info, 'registering webhooks')
 
-  //   await this.removeWebhooks();
-  //   await this.registerFollowWebhook();
-  //   await this.registerStreamOnlineWebhook();
-  //   await this.registerStreamOfflineWebhook();
-  // }
+    await this.registerFollowWebhook(sessionId);
+    // await this.registerStreamOnlineWebhook(sessionId);
+    // await this.registerStreamOfflineWebhook(sessionId);
+  }
 
-  // private async removeWebhooks(): Promise<void> {
-  //   try {
-  //     const response = await axios.get(
-  //       this.twitchAPIWebhookEndpoint,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${this.config.twitchChannelAuthToken}`,
-  //           'Client-ID': this.config.twitchClientId
-  //         }
-  //       });
-  //     log(LogLevel.Info, `TwitchAPI:removeWebhooks - GET Response = ${response.status}`);
+  private async registerFollowWebhook(sessionId: string): Promise<void> {
+    try {
+      const payload = {
+        "type": "channel.follow",
+        "version": "2",
+        "condition": {
+          "broadcaster_user_id": this.config.twitchChannelId,
+          "moderator_user_id": this.config.twitchBotChannelId
+        },
+        "transport": {
+          "method": "websocket",
+          "session_id": sessionId
+        }
+      };
 
-  //     const subs = response.data.data
+      const response = await axios.post(
+        this.twitchAPIWebhookEndpoint,
+        payload,
+        {
+          headers: this.wsHeaders
+        })
+      log(LogLevel.Info, `TwitchAPI:registerFollowWebhook - Response ${response.status}`);
+    } catch (err) {
+      console.dir(err)
+      log(LogLevel.Error, `TwitchAPI:registerFollowWebhook ${err}`);
+    }
+  }
 
-  //     for (const sub of subs) {
-  //       const deleteResponse = await axios.delete(
-  //         `${this.twitchAPIWebhookEndpoint}?id=${sub.id}`,
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${this.config.twitchChannelAuthToken}`,
-  //             'Client-ID': this.config.twitchClientId
-  //           }
-  //         });
-  //       log(LogLevel.Info, `TwitchAPI:removeWebhooks - DELETE Response = ${deleteResponse.status}`);
-  //     }
+  private async registerStreamOnlineWebhook(sessionId: string): Promise<void> {
+    try {
+      const payload = {
+        "type": "stream.online",
+        "version": "1",
+        "condition": { "broadcaster_user_id": `${this.config.twitchChannelId}` },
+        "transport": { "method": "websocket", "session_id": sessionId }
+      };
 
-  //   } catch (err) {
-  //     log(LogLevel.Error, `TwitchAPI:removeWebhooks ${err}`);
-  //   }
-  // }
+      const response = await axios.post(
+        this.twitchAPIWebhookEndpoint,
+        payload,
+        {
+          headers: this.headers
+        });
+      log(LogLevel.Info, `TwitchAPI:registerStreamOnlineWebhook - Response = ${response.status}`);
+    } catch (err) {
+      log(LogLevel.Error, `TwitchAPI:registerStreamOnlineWebhook ${err}`);
+    }
+  }
 
-  // private async registerFollowWebhook(): Promise<void> {
-  //   try {
-  //     const payload = {
-  //       "type": "channel.follow",
-  //       "version": "1",
-  //       "condition": {
-  //         "broadcaster_user_id": this.config.twitchChannelId
-  //       },
-  //       "transport": { "method": "webhook", "callback": `https://${process.env.HOST}/webhooks/follow`, "secret": this.webhookSecret }
-  //     };
+  private async registerStreamOfflineWebhook(sessionId: string): Promise<void> {
+    try {
+      const payload = {
+        "type": "stream.offline",
+        "version": "1",
+        "condition": { "broadcaster_user_id": `${this.config.twitchChannelId}` },
+        "transport": { "method": "websocket", "session_id": sessionId }
+      };
 
-  //     const response = await axios.post(
-  //       this.twitchAPIWebhookEndpoint,
-  //       payload,
-  //       {
-  //         headers: this.headers
-  //       })
-  //     log(LogLevel.Info, `TwitchAPI:registerFollowWebhook - Response ${response.status}`);
-  //   } catch (err) {
-  //     log(LogLevel.Error, `TwitchAPI:registerFollowWebhook ${err}`);
-  //   }
-  // }
-
-  // private async registerStreamOnlineWebhook(): Promise<void> {
-  //   try {
-  //     const payload = {
-  //       "type": "stream.online",
-  //       "version": "1",
-  //       "condition": { "broadcaster_user_id": `${this.config.twitchChannelId}` },
-  //       "transport": { "method": "webhook", "callback": `https://${process.env.HOST}/webhooks/stream`, "secret": this.webhookSecret }
-  //     };
-
-  //     const response = await axios.post(
-  //       this.twitchAPIWebhookEndpoint,
-  //       payload,
-  //       {
-  //         headers: this.headers
-  //       });
-  //     log(LogLevel.Info, `TwitchAPI:registerStreamOnlineWebhook - Response = ${response.status}`);
-  //   } catch (err) {
-  //     log(LogLevel.Error, `TwitchAPI:registerStreamOnlineWebhook ${err}`);
-  //   }
-  // }
-
-  // private async registerStreamOfflineWebhook(): Promise<void> {
-  //   try {
-  //     const payload = {
-  //       "type": "stream.offline",
-  //       "version": "1",
-  //       "condition": { "broadcaster_user_id": `${this.config.twitchChannelId}` },
-  //       "transport": { "method": "webhook", "callback": `https://${process.env.HOST}/webhooks/stream`, "secret": this.webhookSecret }
-  //     };
-
-  //     const response = await axios.post(
-  //       this.twitchAPIWebhookEndpoint,
-  //       payload,
-  //       {
-  //         headers: this.headers
-  //       });
-  //     log(LogLevel.Info, `TwitchAPI:registerStreamOfflineWebhook - Response = ${response.status}`);
-  //   } catch (err) {
-  //     log(LogLevel.Error, `TwitchAPI:registerStreamOfflineWebhook ${err}`);
-  //   }
-  // }
-
-  // public validateWebhook(request: Request, response: Response, next: NextFunction): unknown {
-
-  //   const givenSignature = request.headers['twitch-eventsub-message-signature'];
-
-  //   if (!givenSignature) {
-  //     log(LogLevel.Error, `webhooks: validator - missing signature`)
-  //     return response.status(409).json({
-  //       error: 'Missing signature'
-  //     });
-  //   }
-  //   log(LogLevel.Info, `Twitch:hooks: x-hub-signature: ${givenSignature}`)
-
-  //   const digest = Crypto.createHmac('sha256', this.webhookSecret)
-  //     .update((request.headers['twitch-eventsub-message-id'] + request.headers['twitch-eventsub-message-timestamp'] + request.body))
-  //     .digest('hex');
-  //   log(LogLevel.Info, `Twitch:hooks: digest: sha256=${digest}`)
-
-  //   if (Crypto.timingSafeEqual(Buffer.from(`sha256=${digest}`), Buffer.from(givenSignature))) {
-  //     return next();
-  //   } else {
-  //     log(LogLevel.Error, `webhooks: validator - invalid signature`)
-  //     return response.status(409).json({
-  //       error: 'Invalid signature'
-  //     });
-  //   }
-  // }
+      const response = await axios.post(
+        this.twitchAPIWebhookEndpoint,
+        payload,
+        {
+          headers: this.headers
+        });
+      log(LogLevel.Info, `TwitchAPI:registerStreamOfflineWebhook - Response = ${response.status}`);
+    } catch (err) {
+      log(LogLevel.Error, `TwitchAPI:registerStreamOfflineWebhook ${err}`);
+    }
+  }
 
   /**
    * Retrieves data regarding a Twitch user from the Twitch API

@@ -6,6 +6,7 @@ export type AutoBaldConfig = {
     twitchClientSecret: string;
     twitchChannelAuthToken: string;
     twitchChannelName: string;
+    twitchBotChannelId: string;
     twitchBotUsername: string;
     twitchBotAuthToken: string;
     tigrisClientId: string;

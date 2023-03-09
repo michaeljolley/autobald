@@ -101,7 +101,8 @@ const app = new Vue({
           break;
         case 'onFollow':
           line1 = 'New';
-          line2 = 'Follower';
+          line2 = name;
+          line3 = 'Follower';
           audio = this.alertsAudioSrc('ohmy');
           break;
         case 'onSub':
