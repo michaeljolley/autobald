@@ -1,8 +1,12 @@
+import { UserEventType } from "../userEventType";
 import { User } from "./user";
-import { IUserEvent } from "./IUserEvent"
+import { UserEvent } from "./userEvent"
 
-export class OnFollowEvent implements IUserEvent {
+export class OnFollowEvent extends UserEvent {
   constructor(
-    public user: User
-  ) { }
+    user: User
+  ) {
+    super(user, UserEventType.Follow)
+   }
+   event: {}
 }

@@ -6,7 +6,7 @@ import {
   gitHub,
   help,
   instagram,
-  shoutOut,
+  project,
   store,
   stop,
   theme,
@@ -31,7 +31,7 @@ export abstract class CommandRegistry {
     this.commands.push(new Command('uses', uses))
     this.commands.push(new Command('help', help))
     this.commands.push(new Command('instagram', instagram))
-    this.commands.push(new Command('so', shoutOut))
+    this.commands.push(new Command('project', project))
     this.commands.push(new Command('stop', stop))
     this.commands.push(new Command('store', store))
     this.commands.push(new Command('theme', theme))

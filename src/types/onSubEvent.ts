@@ -2,16 +2,27 @@ import { OnResubExtra, OnSubExtra, OnSubGiftExtra, OnSubMysteryGiftExtra } from 
 import { SubMethods } from 'tmi.js'
 
 import { User } from "./user"
-import { IUserEvent } from "./IUserEvent"
+import { UserEvent } from "./userEvent"
+import { UserEventType } from '../userEventType'
+import { Field, TigrisDataTypes } from '@tigrisdata/core'
 
-export class OnSubEvent implements IUserEvent {
+export class OnSubEvent extends UserEvent {
   constructor(
-    public user: User,
+    user: User,
     public message: string,
     public subTierInfo: SubMethods,
     public extra: OnSubExtra | OnResubExtra | OnSubGiftExtra | OnSubMysteryGiftExtra,
     public cumulativeMonths?: number,
     public subGifter?: User
   ) {
+    super(user, UserEventType.Sub)
+    this.event = {
+      message, subTierInfo
+    }
+  }
+
+  event: {
+    message: string,
+    subTierInfo: SubMethods
   }
 }

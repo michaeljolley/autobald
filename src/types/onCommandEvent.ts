@@ -1,13 +1,25 @@
 import { User } from "./user";
 import { OnCommandExtra, OnMessageFlags } from "comfy.js";
-import { IUserEvent } from "./IUserEvent"
+import { UserEvent } from "./userEvent"
+import { UserEventType } from "../userEventType";
 
-export class OnCommandEvent implements IUserEvent {
+export class OnCommandEvent extends UserEvent {
   constructor(
-    public user: User,
+    user: User,
     public command: string,
     public message: string,
     public flags: OnMessageFlags,
     public extra: OnCommandExtra
-  ) { }
+  ) { 
+    super(user, UserEventType.Command)
+    this.event = {
+      message,
+      command
+    }
+  }
+  
+  event: {
+    message: string,
+    command: string
+  }
 }

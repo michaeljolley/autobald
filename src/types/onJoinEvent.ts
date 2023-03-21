@@ -1,9 +1,13 @@
+import { UserEventType } from "../userEventType";
 import { User } from "./user";
-import { IUserEvent } from "./IUserEvent"
+import { UserEvent } from "./userEvent"
 
-export class OnJoinEvent implements IUserEvent {
+export class OnJoinEvent extends UserEvent {
   constructor(
-    public user: User,
+    user: User,
     public self: boolean
-  ) { }
+  ) { 
+    super(user, UserEventType.Join)
+  }
+  event: {}
 }

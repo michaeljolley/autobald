@@ -1,10 +1,8 @@
-import { NextFunction } from 'express';
 import { TwitchAPI } from './api'
 import { Tigris } from '../tigris';
 import { User, Stream, AutoBaldConfig } from '../../types'
 import { Cache, CacheType } from '../../cache'
 import { LogLevel, log } from '../../log'
-
 
 export abstract class Twitch {
 
@@ -64,45 +62,46 @@ export abstract class Twitch {
     return user
   }
 
-  // /**
-  //  * Attempts to retrieve a stream from the cache and, if needed, the Twitch API
-  //  * @param streamDate Date the stream started on
-  //  */
-  // public static async getStream(streamDate: string): Promise<Stream | undefined> {
-  //   let stream: Stream = Cache.get(CacheType.Stream, streamDate) as Stream | undefined
+  /**
+   * Attempts to retrieve a stream from the cache and, if needed, the Twitch API
+   * @param streamDate Date the stream started on
+   */
+  public static async getStream(streamDate: string): Promise<Stream | undefined> {
+    let stream: Stream = Cache.get(CacheType.Stream, streamDate) as Stream | undefined
 
-  //   if (!stream && this.config) {
+    if (!stream && this.config) {
 
-  //     try {
-  //       stream = await Fauna.getStream(streamDate)
-  //     }
-  //     catch (err) {
-  //       log(LogLevel.Error, `Twitch:getStream - Fauna:getStream: ${err}`)
-  //     }
+      try {
+        stream = await Tigris.getStream(streamDate)
+      }
+      catch (err) {
+        log(LogLevel.Error, `Twitch:getStream - Tigris:getStream: ${err}`)
+      }
 
-  //     if (!stream || stream.ended_at) {
-  //       let apiStream: Stream
-  //       try {
-  //         apiStream = await this.twitchAPI.getStream(streamDate)
-  //       }
-  //       catch (err) {
-  //         log(LogLevel.Error, `Twitch:getStream - API:getStream: ${err}`)
-  //       }
+      if (!stream || stream.ended_at) {
+        let apiStream: Stream
+        try {
+          apiStream = await this.twitchAPI.getStream(streamDate)
+        }
+        catch (err) {
+          log(LogLevel.Error, `Twitch:getStream - API:getStream: ${err}`)
+        }
 
-  //       if (apiStream) {
-  //         stream = await Fauna.saveStream(apiStream)
-  //       }
-  //     }
+        if (apiStream) {
+          stream = await Tigris.saveStream(apiStream)
+        }
+      }
 
-  //     if (stream) {
-  //       Cache.set(CacheType.Stream, stream)
-  //     }
-  //   }
+      if (stream) {
+        Cache.set(CacheType.Stream, stream)
+      }
+    }
 
-  //   return stream
-  // }
+    return stream
+  }
 
-  // public static validateWebhook(request: Request, response: Response, next: NextFunction): unknown {
-  //   return Twitch.twitchAPI.validateWebhook(request, response, next);
-  // }
+  public static async saveStream(stream: Stream): Promise<Stream | undefined> {
+    Cache.set(CacheType.Stream, stream)
+    return await Tigris.saveStream(stream)
+  }
 }

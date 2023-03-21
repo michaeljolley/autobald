@@ -1,9 +1,19 @@
 import { User } from "./user"
-import { IUserEvent } from "./IUserEvent"
+import { UserEvent } from "./userEvent"
+import { UserEventType } from "../userEventType"
 
-export class OnRaidEvent implements IUserEvent {
+export class OnRaidEvent extends UserEvent {
   constructor(
-    public user: User,
+    user: User,
     public viewers: number
-  ) { }
+  ) {
+    super(user, UserEventType.Raid)
+    this.event = {
+      viewers
+    }
+   }
+
+   event: {
+    viewers: number
+   }
 }

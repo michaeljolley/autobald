@@ -3,11 +3,11 @@ import { WebSocket, MessageEvent } from "ws";
 import { Server as HttpServer } from "http";
 
 import { EventBus } from "../events";
-import { AutoBaldConfig, OnChatMessageEvent, OnCheerEvent, OnFollowEvent, OnJoinEvent, OnPartEvent, OnPointRedemptionEvent, OnRaidEvent, OnSoundEffectEvent, OnStopEvent, OnSubEvent, TwitchFollowEvent, TwitchWebSocketMessage, TwitchWebSocketPayloadSession, User } from "../types";
+import { AutoBaldConfig, OnChatMessageEvent, OnCheerEvent, OnCommandEvent, OnFollowEvent, OnJoinEvent, OnPartEvent, OnPointRedemptionEvent, OnRaidEvent, OnSoundEffectEvent, OnStopEvent, OnStreamEvent, OnSubEvent, Stream, TwitchFollowEvent, TwitchStreamEvent, TwitchWebSocketMessage, TwitchWebSocketPayloadSession, User, UserEvent } from "../types";
 import { BotEvents } from "../botEvents";
 import { log, LogLevel } from "../log";
 import { Twitch } from "../integrations/twitch";
-import { IUserEvent } from "../types/IUserEvent";
+import { Tigris } from "../integrations/tigris";
 
 export class WebSockets {
 
@@ -40,6 +40,8 @@ export class WebSockets {
 
         EventBus.eventEmitter.addListener(BotEvents.OnChatMessage,
             (onChatMessageEvent: OnChatMessageEvent) => this.onChat(onChatMessageEvent))
+        EventBus.eventEmitter.addListener(BotEvents.OnCommand,
+            (onCommandEvent: OnCommandEvent) => this.onCommand(onCommandEvent))
         EventBus.eventEmitter.addListener(BotEvents.OnSoundEffect,
             (onSoundEffectEvent: OnSoundEffectEvent) => this.onSoundEffect(onSoundEffectEvent))
         EventBus.eventEmitter.addListener(BotEvents.OnCheer,
@@ -52,8 +54,6 @@ export class WebSockets {
             (onPartEvent: OnPartEvent) => this.onPart(onPartEvent))
         EventBus.eventEmitter.addListener(BotEvents.OnPointRedemption,
             (onPointRedemptionEvent: OnPointRedemptionEvent) => this.onPointRedemption(onPointRedemptionEvent))
-        EventBus.eventEmitter.addListener(BotEvents.OnSoundEffect,
-            (onSoundEffectEvent: OnSoundEffectEvent) => this.onSoundEffect(onSoundEffectEvent))
         EventBus.eventEmitter.addListener(BotEvents.OnStop,
             (onStopEvent: OnStopEvent) => this.onStop(onStopEvent))
         EventBus.eventEmitter.addListener(BotEvents.OnSub,
@@ -89,7 +89,10 @@ export class WebSockets {
                 await this.clientHandleOnFollow(message.payload.event as TwitchFollowEvent);
                 break;
             case "stream.offline":
+                await this.clientHandleStreamOffline(message.payload.event as TwitchStreamEvent);
+                break;
             case "stream.online":
+                await this.clientHandleStreamOnline(message.payload.event as TwitchStreamEvent);
                 break;
         }
     }
@@ -105,9 +108,43 @@ export class WebSockets {
         log(LogLevel.Info, `WS Follow: ${userInfo.display_name}`)
         this.emit(BotEvents.OnFollow, new OnFollowEvent(userInfo));
     }
+    
+    private async clientHandleStreamOffline(twitchStreamEvent: TwitchStreamEvent) {
+        let stream: Stream
+        const streamDate = new Date().toLocaleDateString('en-US')
+        try {
+            stream = await Twitch.getStream(streamDate)
+            stream.ended_at = stream.ended_at || new Date().toISOString()
+            await Twitch.saveStream(stream)
+        }
+        catch (err) {
+            log(LogLevel.Error, `webhooks: /stream_offline - ${err}`)
+        }
+        log(LogLevel.Info, `WS Stream Offline: ${streamDate}`)
+
+        this.emit(BotEvents.OnStreamEnd, {stream} as OnStreamEvent);
+    }
+    
+    private async clientHandleStreamOnline(streamOnlineEvent: TwitchStreamEvent) {
+        let stream: Stream
+        const streamDate = new Date(streamOnlineEvent.started_at).toLocaleDateString('en-US')
+        try {
+            stream = await Twitch.getStream(streamDate)
+        }
+        catch (err) {
+            log(LogLevel.Error, `webhooks: /stream_online - ${err}`)
+        }
+        log(LogLevel.Info, `WS Stream Online: ${streamDate}`)
+        this.emit(BotEvents.OnStreamStart, { stream } as OnStreamEvent);
+    }
 
     private onChat(onChatMessageEvent: OnChatMessageEvent) {
         this.io.emit(BotEvents.OnChatMessage, onChatMessageEvent)
+        Tigris.saveUserEvent(onChatMessageEvent)
+    }
+    
+    private onCommand(onCommandEvent: OnCommandEvent) {
+        Tigris.saveUserEvent(onCommandEvent)
     }
 
     private onSoundEffect(onSoundEffectEvent: OnSoundEffectEvent) {
@@ -116,10 +153,12 @@ export class WebSockets {
 
     private onCheer(onCheerEvent: OnCheerEvent) {
         this.io.emit(BotEvents.OnCheer, onCheerEvent)
+        Tigris.saveUserEvent(onCheerEvent)
     }
 
     private onFollow(onFollowEvent: OnFollowEvent) {
         this.io.emit(BotEvents.OnFollow, onFollowEvent)
+        Tigris.saveUserEvent(onFollowEvent)
     }
 
     private onJoin(onJoinEvent: OnJoinEvent) {
@@ -132,6 +171,7 @@ export class WebSockets {
 
     private onPointRedemption(onPointRedemptionEvent: OnPointRedemptionEvent) {
         this.io.emit(BotEvents.OnPointRedemption, onPointRedemptionEvent)
+        Tigris.saveUserEvent(onPointRedemptionEvent)
     }
 
     private onStop(onStopEvent: OnStopEvent) {
@@ -140,13 +180,15 @@ export class WebSockets {
 
     private onSub(onSubEvent: OnSubEvent) {
         this.io.emit(BotEvents.OnSub, onSubEvent)
+        Tigris.saveUserEvent(onSubEvent)
     }
 
     private onRaid(onRaidEvent: OnRaidEvent) {
         this.io.emit(BotEvents.OnRaid, onRaidEvent)
+        Tigris.saveUserEvent(onRaidEvent)
     }
 
-    private emit(event: BotEvents, payload: IUserEvent) {
+    private emit(event: BotEvents, payload: UserEvent | OnStreamEvent) {
         EventBus.eventEmitter.emit(event, payload)
     }
 }

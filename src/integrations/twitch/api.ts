@@ -38,8 +38,8 @@ export class TwitchAPI {
     log(LogLevel.Info, 'registering webhooks')
 
     await this.registerFollowWebhook(sessionId);
-    // await this.registerStreamOnlineWebhook(sessionId);
-    // await this.registerStreamOfflineWebhook(sessionId);
+    await this.registerStreamOnlineWebhook(sessionId);
+    await this.registerStreamOfflineWebhook(sessionId);
   }
 
   private async registerFollowWebhook(sessionId: string): Promise<void> {
@@ -155,7 +155,11 @@ export class TwitchAPI {
         const body = response.data
         const streamData = body.data.length > 1 ? body.data : body.data[0]
         if (streamData) {
-          stream = new Stream(streamData.id, streamData.started_at, streamDate, streamData.title)
+          stream = {
+            started_at: streamData.started_at, 
+            streamDate, 
+            title: streamData.title
+          } as Stream
         }
       }
     } catch (err) {

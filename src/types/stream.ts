@@ -1,10 +1,16 @@
+import { Field, PrimaryKey, TigrisCollection, TigrisDataTypes } from "@tigrisdata/core";
+
+@TigrisCollection("streams")
 export class Stream {
-  constructor(
-    public id: string,
-    public started_at: string,
-    public streamDate: string,
-    public title: string,
-    public ended_at?: string,
-    public _id?: string
-  ) { }
+  @PrimaryKey(TigrisDataTypes.STRING, { order: 1 })
+  streamDate: string;
+
+  @Field(TigrisDataTypes.STRING)
+  started_at: string;
+
+  @Field(TigrisDataTypes.STRING)
+  ended_at?: string;
+
+  @Field(TigrisDataTypes.STRING)
+  title: string;
 }

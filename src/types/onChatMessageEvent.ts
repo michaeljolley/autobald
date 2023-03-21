@@ -1,10 +1,11 @@
 import { OnMessageExtra, OnMessageFlags } from "comfy.js"
 import { User } from "./user"
-import { IUserEvent } from "./IUserEvent"
+import { UserEvent } from "./userEvent"
+import { UserEventType } from "../userEventType"
 
-export class OnChatMessageEvent implements IUserEvent {
+export class OnChatMessageEvent extends UserEvent {
   constructor(
-    public user: User,
+    user: User,
     public message: string,
     public sanitizedMessage: string,
     public flags: OnMessageFlags,
@@ -12,5 +13,12 @@ export class OnChatMessageEvent implements IUserEvent {
     public extra: OnMessageExtra,
     public id: string,
     public emotes?: string[],
-  ) { }
+  ) { 
+    super(user, UserEventType.ChatMessage)
+    this.event = { message }
+  }
+
+  event: {
+    message: string
+  }
 }

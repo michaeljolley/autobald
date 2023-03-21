@@ -4,7 +4,7 @@ import sanitizeHtml from "sanitize-html";
 import { CommandMonitor } from './commandMonitor';
 import { Twitch } from '../integrations/twitch';
 import { EventBus } from "../events";
-import { AutoBaldConfig, User, OnChatMessageEvent, OnCommandEvent, OnSayEvent, OnSubEvent, OnRaidEvent, OnCheerEvent, OnPartEvent, OnJoinEvent } from "../types";
+import { AutoBaldConfig, User, OnChatMessageEvent, OnCommandEvent, OnSayEvent, OnSubEvent, OnRaidEvent, OnCheerEvent, OnPartEvent, OnJoinEvent, Stream, OnStreamEvent } from "../types";
 import { BotEvents } from "../botEvents";
 import { log, LogLevel } from "../log";
 import { SubMethods } from 'tmi.js'
@@ -47,6 +47,7 @@ export class Chat {
 
         try {
             userInfo = await Twitch.getUser(user)
+            await this.streamCheck();
         }
         catch (err) {
             log(LogLevel.Error, `onCommand: getUser: ${err}`)
@@ -62,6 +63,7 @@ export class Chat {
         log(LogLevel.Info, `onChat: ${user}: ${message}`)
 
         user = user.toLocaleLowerCase();
+        await this.streamCheck();
 
         if (!self
             && user !== process.env.TWITCH_BOT_USERNAME.toLocaleLowerCase()
@@ -194,6 +196,7 @@ export class Chat {
 
         try {
             userInfo = await Twitch.getUser(user)
+            await this.streamCheck();
         }
         catch (err) {
             log(LogLevel.Error, `onCheer: ${err}`)
@@ -210,6 +213,7 @@ export class Chat {
 
         try {
             userInfo = await Twitch.getUser(user)
+            await this.streamCheck();
         }
         catch (err) {
             log(LogLevel.Error, `onRaid: ${err}`)
@@ -226,6 +230,7 @@ export class Chat {
 
         try {
             userInfo = await Twitch.getUser(user)
+            await this.streamCheck();
         }
         catch (err) {
             log(LogLevel.Error, `onSub: ${err}`)
@@ -242,6 +247,7 @@ export class Chat {
         let gifterInfo: User
 
         try {
+            await this.streamCheck();
             userInfo = await Twitch.getUser(recipientUser)
         }
         catch (err) {
@@ -265,6 +271,7 @@ export class Chat {
         let userInfo: User
 
         try {
+            await this.streamCheck();
             userInfo = await Twitch.getUser(user)
         }
         catch (err) {
@@ -276,11 +283,17 @@ export class Chat {
         }
     }
 
-    private onSubMysteryGift(gifterUser: string, numbOfSubs: number, senderCount: number, subTierInfo: SubMethods, extra: OnSubMysteryGiftExtra): void {
+    private async onSubMysteryGift(gifterUser: string, numbOfSubs: number, senderCount: number, subTierInfo: SubMethods, extra: OnSubMysteryGiftExtra) {
         log(LogLevel.Info, `onSubMysteryGift: ${gifterUser} gifted ${numbOfSubs}`)
+        await this.streamCheck();
     }
 
     private emit(event: BotEvents, payload: unknown) {
         EventBus.eventEmitter.emit(event, payload)
+    }
+
+    private async streamCheck() {
+        const streamDate = new Date().toLocaleDateString('en-US')
+        await Twitch.getStream(streamDate)
     }
 }

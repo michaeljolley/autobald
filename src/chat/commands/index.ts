@@ -9,7 +9,7 @@ export * from './uses';
 export * from './help';
 export * from './instagram';
 export * from './livecoders';
-export * from './shoutOut';
+export * from './project';
 export * from './stop';
 export * from './store';
 export * from './theme';

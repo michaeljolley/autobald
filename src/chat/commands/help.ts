@@ -1,6 +1,5 @@
-import { OnCommandEvent, OnSayEvent } from '../../types'
+import { OnSayEvent } from '../../types'
 import { BotEvents } from '../../botEvents'
-import { ShouldThrottle } from '../../shouldThrottle'
 import { EventBus } from '../../events'
 
 import { CommandRegistry } from "../commandRegistry";

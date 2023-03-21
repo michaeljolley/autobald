@@ -1,13 +1,26 @@
 import { OnCheerExtra, OnCheerFlags } from "comfy.js"
 import { User } from "./user"
-import { IUserEvent } from "./IUserEvent"
+import { UserEvent } from "./userEvent"
+import { UserEventType } from "../userEventType"
+import { Field, TigrisDataTypes } from "@tigrisdata/core"
 
-export class OnCheerEvent implements IUserEvent {
+export class OnCheerEvent extends UserEvent {
   constructor(
-    public user: User,
+    user: User,
     public message: string,
     public bits: number,
     public flags: OnCheerFlags,
     public extra: OnCheerExtra
-  ) { }
+  ) {
+    super(user, UserEventType.Cheer)
+    this.event = {
+      message,
+      bits
+    }
+  }
+
+  event: {
+    message: string,
+    bits: number
+  }
 }
