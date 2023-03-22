@@ -1,8 +1,7 @@
-
 Vue.config.devtools = true;
 
 Vue.component('chatMessage', {
-  template: '<div class="message" v-bind:class="{ hide: hideMe, mod: onChatMessageEvent.flags.mod, vip: onChatMessageEvent.flags.vip }" v-bind:style="{ order: total - ind }"><div class="panel"><div class="user" v-bind:style="{ backgroundImage: `url(${onChatMessageEvent.user.avatar_url})` }"></div><div class="bubble"><div v-html="onChatMessageEvent.sanitizedMessage"></div><div class="name">{{onChatMessageEvent.user.display_name}}</div></div></div></div>',
+  template: '<div class="message" v-bind:class="{ hide: hideMe, highlighted: onChatMessageEvent.flags.highlighted, mod: onChatMessageEvent.flags.mod, vip: onChatMessageEvent.flags.vip }" v-bind:style="{ order: total - ind }"><div class="panel"><div class="user" v-bind:style="{ backgroundImage: `url(${onChatMessageEvent.user.avatar_url})` }"></div><div class="bubble"><div v-html="onChatMessageEvent.sanitizedMessage"></div><div class="name">{{onChatMessageEvent.user.display_name}}</div></div></div></div>',
   props: ['ind', 'onChatMessageEvent', 'total'],
   data: function () {
     return {
@@ -30,6 +29,11 @@ const app = new Vue({
       messages: [],
       socket: null
     };
+  },
+  computed: {
+    hasHighlight() {
+      return this.messages.some(f => f.flags.highlighted)
+    }
   },
   methods: {
     addMessage(onChatMessageEvent) {
@@ -65,7 +69,7 @@ const app = new Vue({
 
     console.log("We're loaded and listening to 'onChatMessage' from socket.io");
   },
-  template: `<div class="chat">
+  template: `<div class="chat" v-bind:class="{ fade: hasHighlight }">
               <transition-group name="list" @after-leave="checkOverflow">
                 <chatMessage v-for="(message, index) in messages" :key="message.id" :onChatMessageEvent="message" :ind="index" :total="messages.length" v-on:removeItem="removeItem" ref="message"></chatMessage>
               </transition-group>

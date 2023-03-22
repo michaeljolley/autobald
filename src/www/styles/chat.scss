@@ -1,6 +1,9 @@
 @import "main";
 
 .chat {
+    
+  --angle: 90deg;
+
   display: flex;
   flex-direction: column-reverse;
   height: 98vh;
@@ -20,12 +23,13 @@
     align-items: center;
     
     box-shadow: -0.5em 0.6em 1em -0.4em $darkblue;
+    
+    opacity: 0;
+    animation: fade 1s forwards;
 
     &.hide {
       box-shadow: none;
-      .panel {
-        animation: fade 1s backwards;
-      }
+      animation: fade 1s backwards;
     }
 
     .panel {
@@ -35,11 +39,10 @@
       background-color: $darkblue;
       
       border-top: 5px solid;
-      border-image-source: $gradient;
+      border-image-source: linear-gradient(var(--angle), #f0f 0%, cyan 100%);
       border-image-slice: 1;
       
-      opacity: 0;
-      animation: fade 1s forwards;
+      animation: 10s rotate linear infinite; 
       
       .bubble {
         padding: 15px;
@@ -83,7 +86,7 @@
       .panel {
         background-color: $lightgray;
         .bubble {
-          color: $purple;
+          color: $darkblue;
         }
       }
     }
@@ -96,6 +99,39 @@
         }
       }
     }
+
+    &.highlighted {
+      .panel {
+       
+        background-color: black;
+        border: 5px solid;
+        border-right: 0px;
+        border-image-source: linear-gradient(var(--angle), #f0f 0%, cyan 100%);
+        border-image-slice: 1;
+
+        .bubble {
+          color: $white;
+        }
+
+        &:before {
+          content: "";
+          position: absolute;
+          inset: -5px;
+          transform: translate3d(0px, 0px, 0px); /* (X, Y, Z) */
+          border: 8px solid;
+          border-image-source: linear-gradient(var(--angle), #f0f 0%, cyan 100%); 
+          border-image-slice: 1;
+          filter: blur(8px);
+          animation: 10s rotate linear infinite;
+        }
+      }
+    }
+  }
+  
+  &.fade {
+    .message:not(.highlighted) {
+      animation: unimportant 1s forwards;
+    }
   }
 }
 
@@ -106,4 +142,25 @@
   100% {
     opacity: 1;
   }
+}
+
+@keyframes unimportant {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: .6;
+  }
+}
+
+@keyframes rotate {
+  to {
+    --angle: 360deg;
+  }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
