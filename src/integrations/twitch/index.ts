@@ -22,10 +22,13 @@ export abstract class Twitch {
    * Attempts to retrieve a user from the cache and, if needed, the Twitch API
    * @param login Twitch login of user to retrieve
    */
-  public static async getUser(login: string): Promise<User | undefined> {
-    login = login.toLocaleLowerCase()
-
-    let user: User = Cache.get(CacheType.User, login) as User | undefined
+  public static async getUser(id: string | number): Promise<User | undefined> {
+  
+    let user: User;
+    
+    if (Number.isInteger(id)) {
+      user = Cache.get(CacheType.User, id.toString()) as User | undefined
+    }
 
     const date = new Date();
     date.setDate(date.getDate() - 1);
@@ -33,18 +36,20 @@ export abstract class Twitch {
     if (!user ||
       (!user.lastUpdated || user.lastUpdated < date)) {
 
-      try {
-        user = await Tigris.getUser(login);
-      }
-      catch (err) {
-        log(LogLevel.Error, `Twitch:getUser - Tigris:getUser: ${err}`)
+      if (Number.isInteger(id)) {
+        try {
+          user = await Tigris.getUser(id.toString());
+        }
+        catch (err) {
+          log(LogLevel.Error, `Twitch:getUser - Tigris:getUser: ${err}`)
+        }
       }
 
       if (!user ||
         (!user.lastUpdated || user.lastUpdated < date)) {
         let apiUser: User
         try {
-          apiUser = await this.twitchAPI.getUser(login)
+          apiUser = await this.twitchAPI.getUser(id)
         }
         catch (err) {
           log(LogLevel.Error, `Twitch:getUser - API:getUser: ${err}`)

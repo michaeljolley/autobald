@@ -20,7 +20,7 @@ export abstract class Cache {
   public static set(cacheType: CacheType, object: User | Stream): void {
     const identifier = cacheType === CacheType.Stream ? 
                         (object as Stream).streamDate : 
-                        (object as User).login;
+                        (object as User).id;
 
     this.store[cacheType][identifier] = object;
   }

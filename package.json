@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/builders-club/autobald#readme",
   "dependencies": {
-    "@tigrisdata/core": "^1.0.0-beta.35",
+    "@tigrisdata/core": "^1.0.0-beta.37",
     "axios": "^1.3.4",
     "comfy.js": "^1.1.16",
     "dotenv": "^16.0.3",

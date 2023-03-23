@@ -109,11 +109,11 @@ export class TwitchAPI {
 
   /**
    * Retrieves data regarding a Twitch user from the Twitch API
-   * @param login username of the user to retrieve
+   * @param id id or username of the user to retrieve
    */
-  public async getUser(login: string): Promise<User | undefined> {
+  public async getUser(id: number | string): Promise<User | undefined> {
 
-    const url = `${this.twitchAPIUserEndpoint}?login=${login}`
+    const url = `${this.twitchAPIUserEndpoint}?${(Number.isInteger(id) ? "id=" : "login=")}${id}`
 
     let user: User | undefined = undefined;
 

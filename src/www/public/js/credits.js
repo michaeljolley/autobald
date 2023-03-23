@@ -8,7 +8,6 @@ Vue.component('sponsors', {
           <div class="name">
             <h2 :class="{ tier: credit.tier && credit.tier > 5 }">{{credit.displayName}}</h2>
             <ul>
-              <li v-if="credit.onSponsor"><i class="fab fa-github"></i> GitHub Sponsor</li>
               <li v-if="credit.onSub"><i class="fas fa-crown"></i> Subscriber</li>
               <li v-if="credit.onCheer"><i class="far fa-gem"></i> Cheer</li>
               <li v-if="credit.onDonation"><i class="fas fa-dollar-sign"></i> Donation</li>
@@ -155,7 +154,8 @@ const app = new Vue({
   data() {
     return {
       images: [],
-      sponsors: []
+      sponsors: [],
+      credits: []
     }
   },
   methods: {
@@ -175,8 +175,8 @@ const app = new Vue({
     async processCredits(onCreditRollEvent) {
       if (onCreditRollEvent && onCreditRollEvent.credits) {
         this.groups = [];
-        const credits = onCreditRollEvent.credits;
-        const contributors = credits.map(m => m.avatarUrl);
+        this.credits = onCreditRollEvent.credits;
+        const contributors = this.credits.map(m => m.avatarUrl);
 
         // load all images
         Promise.all(
@@ -187,7 +187,7 @@ const app = new Vue({
           tmp = tmp.concat(tmp);
 
           this.images = tmp;
-          this.sponsors = credits.filter(c => c.onCheer || c.onSponsor || c.onDonation || c.onSub || c.onRaid)
+          this.sponsors = this.credits.filter(c => c.onCheer || c.onDonation || c.onSub || c.onRaid)
             .sort(sortFunction);
         });
       }

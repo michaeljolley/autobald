@@ -31,6 +31,7 @@ export class Chat {
 
         EventBus.eventEmitter.addListener(BotEvents.OnSay,
             (onSayEvent: OnSayEvent) => this.onSay(onSayEvent))
+
     }
 
     public close() {
@@ -46,7 +47,7 @@ export class Chat {
         let userInfo: User
 
         try {
-            userInfo = await Twitch.getUser(user)
+            userInfo = await Twitch.getUser(parseInt(extra.userId))
             await this.streamCheck();
         }
         catch (err) {
@@ -63,6 +64,7 @@ export class Chat {
         log(LogLevel.Info, `onChat: ${user}: ${message}`)
 
         user = user.toLocaleLowerCase();
+        
         await this.streamCheck();
 
         if (!self
@@ -72,7 +74,7 @@ export class Chat {
             let userInfo: User;
 
             try {
-                userInfo = await Twitch.getUser(user)
+                userInfo = await Twitch.getUser(parseInt(extra.userId))
             }
             catch (err) {
                 log(LogLevel.Error, `onChat: ${err}`)
@@ -195,7 +197,7 @@ export class Chat {
         let userInfo: User
 
         try {
-            userInfo = await Twitch.getUser(user)
+            userInfo = await Twitch.getUser(parseInt(extra.userId))
             await this.streamCheck();
         }
         catch (err) {
@@ -229,7 +231,7 @@ export class Chat {
         let userInfo: User
 
         try {
-            userInfo = await Twitch.getUser(user)
+            userInfo = await Twitch.getUser(parseInt(extra.userId))
             await this.streamCheck();
         }
         catch (err) {
@@ -248,14 +250,14 @@ export class Chat {
 
         try {
             await this.streamCheck();
-            userInfo = await Twitch.getUser(recipientUser)
+            userInfo = await Twitch.getUser(parseInt(extra.recipientId))
         }
         catch (err) {
             log(LogLevel.Error, `onSubGift: ${err}`)
         }
 
         try {
-            gifterInfo = await Twitch.getUser(gifterUser)
+            gifterInfo = await Twitch.getUser(parseInt(extra.userId))
         }
         catch (err) {
             log(LogLevel.Error, `onSubGift: ${err}`)
@@ -272,7 +274,7 @@ export class Chat {
 
         try {
             await this.streamCheck();
-            userInfo = await Twitch.getUser(user)
+            userInfo = await Twitch.getUser(parseInt(extra.userId))
         }
         catch (err) {
             log(LogLevel.Error, `onResub: ${err}`)
@@ -296,4 +298,5 @@ export class Chat {
         const streamDate = new Date().toLocaleDateString('en-US')
         await Twitch.getStream(streamDate)
     }
+  
 }

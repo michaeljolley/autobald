@@ -11,6 +11,7 @@ import { Tigris } from './integrations/tigris';
 import { Twitch } from './integrations/twitch';
 import { WebSockets } from './websockets';
 import { overlayRouter } from './www';
+import { Engine } from './engine';
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ async function init(response: AxiosResponse<TwitchTokenResponse>) {
     })
 
     const chat = new Chat(autoBaldConfig);
+    const engine = new Engine();
 
     // close all streams and clean up anything needed for the stream
     // when the process is stopping

@@ -5,6 +5,7 @@ export * from "./userEvent";
 export * from "./onChatMessageEvent";
 export * from "./onCheerEvent";
 export * from "./onCommandEvent";
+export * from "./onCreditRollEvent";
 export * from "./onFollowEvent";
 export * from "./onJoinEvent";
 export * from "./onPartEvent";

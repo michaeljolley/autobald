@@ -15,4 +15,5 @@ export enum BotEvents {
     OnSub = 'onSub',
     OnRaid = 'onRaid',
     OnSay = 'onSay',
+    RequestCreditRoll = 'requestCreditRoll'
 }

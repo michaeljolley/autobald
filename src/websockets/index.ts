@@ -3,7 +3,7 @@ import { WebSocket, MessageEvent } from "ws";
 import { Server as HttpServer } from "http";
 
 import { EventBus } from "../events";
-import { AutoBaldConfig, OnChatMessageEvent, OnCheerEvent, OnCommandEvent, OnFollowEvent, OnJoinEvent, OnPartEvent, OnPointRedemptionEvent, OnRaidEvent, OnSoundEffectEvent, OnStopEvent, OnStreamEvent, OnSubEvent, Stream, TwitchFollowEvent, TwitchStreamEvent, TwitchWebSocketMessage, TwitchWebSocketPayloadSession, User, UserEvent } from "../types";
+import { AutoBaldConfig, OnChatMessageEvent, OnCheerEvent, OnCommandEvent, OnCreditRollEvent, OnFollowEvent, OnJoinEvent, OnPartEvent, OnPointRedemptionEvent, OnRaidEvent, OnSoundEffectEvent, OnStopEvent, OnStreamEvent, OnSubEvent, Stream, TwitchFollowEvent, TwitchStreamEvent, TwitchWebSocketMessage, TwitchWebSocketPayloadSession, User, UserEvent } from "../types";
 import { BotEvents } from "../botEvents";
 import { log, LogLevel } from "../log";
 import { Twitch } from "../integrations/twitch";
@@ -18,6 +18,9 @@ export class WebSockets {
         this.io = new IOServer(server)
 
         this.io.on('connect', (conn: Socket) => {
+
+            conn.on(BotEvents.RequestCreditRoll, (streamDate: string) => this.requestCreditRoll(streamDate))
+
             // Ensure the connection is from the bots www and not
             // and external actor.
             if (conn.handshake.headers.host !== config.wwwHost) {
@@ -61,6 +64,8 @@ export class WebSockets {
             (onSubEvent: OnSubEvent) => this.onSub(onSubEvent))
         EventBus.eventEmitter.addListener(BotEvents.OnRaid,
             (onRaidEvent: OnRaidEvent) => this.onRaid(onRaidEvent))
+        EventBus.eventEmitter.addListener(BotEvents.OnCreditRoll,
+            (onCreditRollEvent: OnCreditRollEvent) => this.onCreditRoll(onCreditRollEvent))
     }
 
     private async clientMessage(message: TwitchWebSocketMessage) {
@@ -101,7 +106,7 @@ export class WebSockets {
     private async clientHandleOnFollow(twitchFollowEvent: TwitchFollowEvent) {
         let userInfo: User
         try {
-            userInfo = await Twitch.getUser(twitchFollowEvent.user_login.toLocaleLowerCase())
+            userInfo = await Twitch.getUser(parseInt(twitchFollowEvent.user_id))
         }
         catch (err) {
             log(LogLevel.Error, `webhooks: /follow - ${err}`)
@@ -142,6 +147,15 @@ export class WebSockets {
     private onChat(onChatMessageEvent: OnChatMessageEvent) {
         this.io.emit(BotEvents.OnChatMessage, onChatMessageEvent)
         Tigris.saveUserEvent(onChatMessageEvent)
+    }
+    
+    private onCreditRoll(onCreditRollEvent: OnCreditRollEvent) {
+        this.io.emit(BotEvents.OnCreditRoll, onCreditRollEvent)
+    }
+
+    private requestCreditRoll(streamDate: string) {
+        log(LogLevel.Info, `requestCreditRoll ${streamDate}`)
+        this.emit(BotEvents.RequestCreditRoll, streamDate)
     }
     
     private onCommand(onCommandEvent: OnCommandEvent) {
@@ -189,7 +203,7 @@ export class WebSockets {
         Tigris.saveUserEvent(onRaidEvent)
     }
 
-    private emit(event: BotEvents, payload: UserEvent | OnStreamEvent) {
+    private emit(event: BotEvents, payload: UserEvent | OnStreamEvent | string) {
         EventBus.eventEmitter.emit(event, payload)
     }
 }
