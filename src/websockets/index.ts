@@ -29,6 +29,7 @@ export class WebSockets {
         this.client = new WebSocket("wss://eventsub-beta.wss.twitch.tv/ws");
 
         this.client.onclose = (event) => {
+            log(LogLevel.Info, `Twitch WS: Reconnecting to Twitch`)
             this.client = new WebSocket("wss://eventsub-beta.wss.twitch.tv/ws");
         }
 
@@ -80,7 +81,7 @@ export class WebSockets {
     }
 
     private async clientRegisterSubscriptions(session: TwitchWebSocketPayloadSession) {
-        await Twitch.registerWebhooks(session.id);
+        await Twitch.registerWebSocketSubscriptions(session.id);
     }
 
     private async clientHandleNotification(message: TwitchWebSocketMessage) {

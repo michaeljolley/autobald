@@ -1,9 +1,6 @@
-import { NextFunction, Request, Response } from 'express'
 import axios, { AxiosResponse } from 'axios'
 import { AutoBaldConfig, Stream, User } from '../../types'
 import { LogLevel, log } from '../../log';
-import { Guid } from "guid-typescript";
-import * as Crypto from 'crypto';
 
 export class TwitchAPI {
 
@@ -14,7 +11,6 @@ export class TwitchAPI {
 
   private headers: Record<string, string | number | boolean>
   private wsHeaders: Record<string, string | number | boolean>
-  private webhookSecret: string
 
   constructor(private config: AutoBaldConfig) {
     this.headers = {
@@ -30,19 +26,18 @@ export class TwitchAPI {
   }
 
   /**
-   * Registers all webhooks with Twitch directed to this instance of the bot
+   * Registers all websocket subscriptions with Twitch directed to this instance of the bot
    */
-  public async registerWebhooks(sessionId: string): Promise<void> {
-    this.webhookSecret = Guid.create().toString();
+  public async registerWebSocketSubscriptions(sessionId: string): Promise<void> {
+    
+    log(LogLevel.Info, 'Registering WebSocket subscriptions')
 
-    log(LogLevel.Info, 'registering webhooks')
-
-    await this.registerFollowWebhook(sessionId);
-    await this.registerStreamOnlineWebhook(sessionId);
-    await this.registerStreamOfflineWebhook(sessionId);
+    await this.registerFollowWSSubscription(sessionId);
+    await this.registerStreamOnlineWSSubscription(sessionId);
+    await this.registerStreamOfflineWSSubscription(sessionId);
   }
 
-  private async registerFollowWebhook(sessionId: string): Promise<void> {
+  private async registerFollowWSSubscription(sessionId: string): Promise<void> {
     try {
       const payload = {
         "type": "channel.follow",
@@ -63,14 +58,14 @@ export class TwitchAPI {
         {
           headers: this.wsHeaders
         })
-      log(LogLevel.Info, `TwitchAPI:registerFollowWebhook - Response ${response.status}`);
+      log(LogLevel.Info, `TwitchAPI:registerFollowWSSubscription - Response ${response.status}`);
     } catch (err) {
       console.dir(err)
-      log(LogLevel.Error, `TwitchAPI:registerFollowWebhook ${err}`);
+      log(LogLevel.Error, `TwitchAPI:registerFollowWSSubscription ${err}`);
     }
   }
 
-  private async registerStreamOnlineWebhook(sessionId: string): Promise<void> {
+  private async registerStreamOnlineWSSubscription(sessionId: string): Promise<void> {
     try {
       const payload = {
         "type": "stream.online",
@@ -85,13 +80,13 @@ export class TwitchAPI {
         {
           headers: this.headers
         });
-      log(LogLevel.Info, `TwitchAPI:registerStreamOnlineWebhook - Response = ${response.status}`);
+      log(LogLevel.Info, `TwitchAPI:registerStreamOnlineWSSubscription - Response = ${response.status}`);
     } catch (err) {
-      log(LogLevel.Error, `TwitchAPI:registerStreamOnlineWebhook ${err}`);
+      log(LogLevel.Error, `TwitchAPI:registerStreamOnlineWSSubscription ${err}`);
     }
   }
 
-  private async registerStreamOfflineWebhook(sessionId: string): Promise<void> {
+  private async registerStreamOfflineWSSubscription(sessionId: string): Promise<void> {
     try {
       const payload = {
         "type": "stream.offline",
@@ -106,9 +101,9 @@ export class TwitchAPI {
         {
           headers: this.headers
         });
-      log(LogLevel.Info, `TwitchAPI:registerStreamOfflineWebhook - Response = ${response.status}`);
+      log(LogLevel.Info, `TwitchAPI:registerStreamOfflineWSSubscription - Response = ${response.status}`);
     } catch (err) {
-      log(LogLevel.Error, `TwitchAPI:registerStreamOfflineWebhook ${err}`);
+      log(LogLevel.Error, `TwitchAPI:registerStreamOfflineWSSubscription ${err}`);
     }
   }
 

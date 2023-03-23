@@ -1,34 +1,27 @@
 import { User, Stream } from "../types"
 import { CacheType } from "./cacheType"
 
+type Store = {
+  users: Record<string, User>,
+  streams: Record<string, Stream>
+}
+
 export abstract class Cache {
 
-  private static users: User[] = []
-  private static streams: Stream[] = []
-
-  public static get(cacheType: CacheType, identifier: string): unknown {
-    switch (cacheType) {
-      case CacheType.Stream:
-        return this.streams.find(f => f.streamDate === identifier)
-      case CacheType.User:
-        return this.users.find(f => f.login === identifier)
-    }
+  private static store: Store = {
+    users: {},
+    streams: {}
   }
 
-  public static set(cacheType: CacheType, object: unknown): void {
-    switch (cacheType) {
-      case CacheType.Stream: {
-        const stream: Stream = object as Stream
-        const newStreams = this.streams.filter(f => f.streamDate !== stream.streamDate)
-        this.streams = [...newStreams, stream]
-        break;
-      }
-      case CacheType.User: {
-        const user: User = object as User
-        const newUsers = this.users.filter(f => f.login !== user.login)
-        this.users = [...newUsers, user]
-        break;
-      }
-    }
+  public static get(cacheType: CacheType, identifier: string): unknown {
+    return this.store[cacheType][identifier]
+  }
+
+  public static set(cacheType: CacheType, object: User | Stream): void {
+    const identifier = cacheType === CacheType.Stream ? 
+                        (object as Stream).streamDate : 
+                        (object as User).login;
+
+    this.store[cacheType][identifier] = object;
   }
 }

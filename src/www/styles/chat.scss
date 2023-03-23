@@ -25,6 +25,7 @@
     box-shadow: -0.5em 0.6em 1em -0.4em $darkblue;
     
     opacity: 0;
+    transition: 1s linear all;
     animation: fade 1s forwards;
 
     &.hide {
@@ -32,106 +33,103 @@
       animation: fade 1s backwards;
     }
 
-    .panel {
-      display: flex;
-      flex-direction: row-reverse;
-      width: 400px;
-      background-color: $darkblue;
-      
-      border-top: 5px solid;
-      border-image-source: linear-gradient(var(--angle), #f0f 0%, cyan 100%);
-      border-image-slice: 1;
-      
-      animation: 10s rotate linear infinite; 
-      
-      .bubble {
-        padding: 15px;
-        width: 340px;
-        word-wrap: break-word;
-        white-space: pre-line;
+    .wrap {
+      opacity: 1;
+      animation: high 1s linear;
 
+      .panel {
         display: flex;
-        flex-direction: column;
+        flex-direction: row-reverse;
+        width: 400px;
+        background-color: $darkblue;
         
-        font-size: 1.2em;
-        color: $white;
-
-        span {
-          color: $neonpink;
-        }
+        border-top: 5px solid;
+        border-image-source: linear-gradient(var(--angle), #f0f 0%, cyan 100%);
+        border-image-slice: 1;
         
-        .name {
-          font-family: 'Roboto';
-          font-size: .8em;
-          font-weight: bold;
-          background: $gradient;
-          background-clip: text;
-          margin-top: 10px;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-      }
+        animation: 10s rotate linear infinite; 
+        
+        .bubble {
+          padding: 15px;
+          width: 340px;
+          word-wrap: break-word;
+          white-space: pre-line;
   
-      .user {
-        width: 60px;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-position-y: bottom;
-        background-color: $white;
-      }    
+          display: flex;
+          flex-direction: column;
+          
+          font-size: 1.2em;
+          color: $white;
+  
+          span {
+            color: $neonpink;
+          }
+          
+          .name {
+            font-family: 'Roboto';
+            font-size: .8em;
+            font-weight: bold;
+            background: $gradient;
+            background-clip: text;
+            margin-top: 10px;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+        }
+    
+        .user {
+          width: 60px;
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-position-y: bottom;
+          background-color: $white;
+        }    
+      }
     }
     
-    &.mod {
-      .panel {
-        background-color: $lightgray;
-        .bubble {
-          color: $darkblue;
-        }
+    &.mod .wrap .panel {
+      background-color: $lightgray;
+      .bubble {
+        color: $darkblue;
       }
     }
  
-    &.vip {
-      .panel {
-        background-color: $white;
-        .bubble {
-          color: $darkblue;
-        }
+    &.vip .wrap .panel {
+      background-color: $white;
+      .bubble {
+        color: $darkblue;
       }
     }
 
-    &.highlighted {
-      .panel {
-       
-        background-color: black;
-        border: 5px solid;
-        border-right: 0px;
-        border-image-source: linear-gradient(var(--angle), #f0f 0%, cyan 100%);
+    &.highlighted .wrap .panel {
+      background-color: black;
+      border: 5px solid;
+      border-right: 0px;
+      border-image-source: linear-gradient(var(--angle), #f0f 0%, cyan 100%);
+      border-image-slice: 1;
+
+      .bubble {
+        color: $white;
+      }
+
+      &:before {
+        content: "";
+        position: absolute;
+        inset: -5px;
+        transform: translate3d(0px, 0px, 0px); /* (X, Y, Z) */
+        border: 8px solid;
+        border-image-source: linear-gradient(var(--angle), #f0f 0%, cyan 100%); 
         border-image-slice: 1;
-
-        .bubble {
-          color: $white;
-        }
-
-        &:before {
-          content: "";
-          position: absolute;
-          inset: -5px;
-          transform: translate3d(0px, 0px, 0px); /* (X, Y, Z) */
-          border: 8px solid;
-          border-image-source: linear-gradient(var(--angle), #f0f 0%, cyan 100%); 
-          border-image-slice: 1;
-          filter: blur(8px);
-          animation: 10s rotate linear infinite;
-        }
+        filter: blur(8px);
+        animation: 10s rotate linear infinite;
       }
     }
   }
   
-  &.fade {
-    .message:not(.highlighted) {
-      animation: unimportant 1s forwards;
-    }
+  &.fade .message:not(.highlighted) .wrap {
+    opacity: .6;
+    animation: low 1s forwards;
   }
 }
 
@@ -144,14 +142,22 @@
   }
 }
 
-@keyframes unimportant {
+@keyframes low {
   0% {
-    opacity: 0;
+    opacity: 1;
   }
   100% {
     opacity: .6;
   }
-}
+} 
+@keyframes high {
+  0% {
+    opacity: .6;
+  }
+  100% {
+    opacity: 1;
+  }
+} 
 
 @keyframes rotate {
   to {

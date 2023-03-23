@@ -14,8 +14,8 @@ export abstract class Twitch {
     this.twitchAPI = new TwitchAPI(config)
   }
 
-  public static async registerWebhooks(sessionId: string): Promise<void> {
-    this.twitchAPI.registerWebhooks(sessionId);
+  public static async registerWebSocketSubscriptions(sessionId: string): Promise<void> {
+    this.twitchAPI.registerWebSocketSubscriptions(sessionId);
   }
 
   /**
